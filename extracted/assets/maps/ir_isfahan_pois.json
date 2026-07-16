@@ -1,0 +1,34 @@
+[
+  {
+    "id": "ir_isfahan_poi_0",
+    "title": "نقش جهان",
+    "subtitle": "اصفهان",
+    "lat": 32.6577,
+    "lon": 51.6776,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_isfahan_poi_1",
+    "title": "سی‌وسه‌پل",
+    "subtitle": "اصفهان",
+    "lat": 32.6447,
+    "lon": 51.6675,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_isfahan_poi_2",
+    "title": "فرودگاه اصفهان",
+    "subtitle": "اصفهان",
+    "lat": 32.7508,
+    "lon": 51.8613,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_isfahan_poi_3",
+    "title": "خمینی‌شهر",
+    "subtitle": "اصفهان",
+    "lat": 32.6856,
+    "lon": 51.5361,
+    "cat": "other"
+  }
+]

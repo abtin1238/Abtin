@@ -1,0 +1,19 @@
+{
+  "id": "ir_gilan",
+  "name_fa": "گیلان — گراف آفلاین",
+  "version": 1,
+  "center": [
+    37.3,
+    49.599999999999994
+  ],
+  "bbox": [
+    37.1,
+    49.4,
+    37.5,
+    49.8
+  ],
+  "graph": "ir_gilan_graph.json",
+  "pois": "ir_gilan_pois.json",
+  "node_count": 228,
+  "edge_count": 972
+}
