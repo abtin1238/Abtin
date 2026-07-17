@@ -1,0 +1,19 @@
+{
+  "id": "ir_tehran",
+  "name_fa": "تهران — گراف آفلاین",
+  "version": 1,
+  "center": [
+    35.7,
+    51.45
+  ],
+  "bbox": [
+    35.45,
+    50.85,
+    35.95,
+    52.05
+  ],
+  "graph": "ir_tehran_graph.json",
+  "pois": "ir_tehran_pois.json",
+  "node_count": 536,
+  "edge_count": 2380
+}
