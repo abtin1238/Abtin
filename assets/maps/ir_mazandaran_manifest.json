@@ -1,0 +1,19 @@
+{
+  "id": "ir_mazandaran",
+  "name_fa": "مازندران — گراف آفلاین",
+  "version": 1,
+  "center": [
+    36.599999999999994,
+    52.5
+  ],
+  "bbox": [
+    36.4,
+    52.2,
+    36.8,
+    52.8
+  ],
+  "graph": "ir_mazandaran_graph.json",
+  "pois": "ir_mazandaran_pois.json",
+  "node_count": 256,
+  "edge_count": 1060
+}

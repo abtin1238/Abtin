@@ -1,0 +1,85 @@
+name: abtin_navigator
+description: "آبتین - مسیریاب هوشمند آفلاین | Aabtin Offline Smart Navigator"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+
+  # Map engine
+  flutter_map: ^7.0.0
+  latlong2: ^0.9.1
+  flutter_map_tile_caching: ^9.1.4
+
+  # HTTP (optional tile download only)
+  http: ^1.2.2
+
+  # Local encrypted DB (sqlite3 + SQLCipher libs)
+  sqlcipher_flutter_libs: ^0.6.0
+  sqlite3: ^2.4.0
+  path_provider: ^2.1.5
+  path: ^1.9.0
+
+  # Cache
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Location / GPS
+  geolocator: ^11.0.0
+  flutter_compass: ^0.8.0
+  sensors_plus: ^6.0.1
+
+  # Offline voice (TTS)
+  flutter_tts: ^4.0.2
+
+  # Utils — pin intl to Flutter 3.24 localizations
+  intl: 0.19.0
+  shared_preferences: ^2.2.3
+  permission_handler: ^11.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+
+dependency_overrides:
+  # جلوگیری از conflict با flutter_localizations روی CI
+  intl: 0.19.0
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 24
+  remove_alpha_ios: true
+  background_color_ios: "#0A0E1A"
+  adaptive_icon_background: "#0A0E1A"
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/gauges/
+    - assets/models/
+    - assets/maps/
+    - assets/vosk/
+  fonts:
+    - family: Vazirmatn
+      fonts:
+        - asset: assets/fonts/Vazirmatn-Regular.ttf
+        - asset: assets/fonts/Vazirmatn-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Vazirmatn-Bold.ttf
+          weight: 700

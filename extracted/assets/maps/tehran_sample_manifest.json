@@ -1,0 +1,21 @@
+{
+  "id": "tehran-metro-v2",
+  "name_fa": "تهران (گراف آفلاین v2)",
+  "name_en": "Tehran Offline Graph v2",
+  "version": 2,
+  "center": [
+    35.718799999999995,
+    51.376799999999996
+  ],
+  "bbox": [
+    35.66,
+    51.3,
+    35.773399999999995,
+    51.4488
+  ],
+  "graph": "tehran_sample_graph.json",
+  "pois": "tehran_sample_pois.json",
+  "node_count": 912,
+  "edge_count": 4148,
+  "notes": "Dense multi-class road graph with named corridors and POI anchors"
+}
