@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ir_yazd_poi_0",
+    "title": "امیرچخماق",
+    "subtitle": "یزد",
+    "lat": 31.893,
+    "lon": 54.369,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_yazd_poi_1",
+    "title": "باغ دولت‌آباد",
+    "subtitle": "یزد",
+    "lat": 31.901,
+    "lon": 54.353,
+    "cat": "park"
+  },
+  {
+    "id": "ir_yazd_poi_2",
+    "title": "فرودگاه یزد",
+    "subtitle": "یزد",
+    "lat": 31.904,
+    "lon": 54.276,
+    "cat": "travel"
+  }
+]

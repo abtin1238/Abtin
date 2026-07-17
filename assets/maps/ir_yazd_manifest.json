@@ -1,0 +1,19 @@
+{
+  "id": "ir_yazd",
+  "name_fa": "یزد — گراف آفلاین",
+  "version": 1,
+  "center": [
+    31.9,
+    54.375
+  ],
+  "bbox": [
+    31.8,
+    54.25,
+    32.0,
+    54.5
+  ],
+  "graph": "ir_yazd_graph.json",
+  "pois": "ir_yazd_pois.json",
+  "node_count": 171,
+  "edge_count": 714
+}
