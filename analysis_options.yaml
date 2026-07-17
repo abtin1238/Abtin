@@ -1,0 +1,19 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    invalid_annotation_target: ignore
+    # CI-friendly: don't fail build on style nits
+    prefer_const_constructors: ignore
+    prefer_final_locals: ignore
+    avoid_print: ignore
+    require_trailing_commas: ignore
+    unused_import: warning
+    dead_code: warning
+
+linter:
+  rules:
+    prefer_const_constructors: false
+    prefer_final_locals: false
+    avoid_print: false
+    require_trailing_commas: false
