@@ -1,0 +1,53 @@
+name: Build Abtin APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.5"
+          channel: "stable"
+          cache: true
+
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Get dependencies
+        run: |
+          rm -f pubspec.lock
+          flutter pub get
+
+      - name: Generate app icon
+        run: dart run flutter_launcher_icons || true
+
+      - name: Install native sqlite3 (needed by `flutter test` on Linux host)
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
+      - name: Unit tests (offline core)
+        run: flutter test test/routing_engine_test.dart test/offline_complete_test.dart --reporter expanded
+
+      - name: Build release APK (split-per-abi)
+        run: flutter build apk --release --split-per-abi --tree-shake-icons
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: abtin-apks
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
