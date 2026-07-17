@@ -1,0 +1,130 @@
+[
+  {
+    "id": "poi_azadi",
+    "title": "میدان آزادی",
+    "subtitle": "تهران",
+    "lat": 35.6997,
+    "lon": 51.3381,
+    "cat": "travel"
+  },
+  {
+    "id": "poi_milad",
+    "title": "برج میلاد",
+    "subtitle": "تهران",
+    "lat": 35.7448,
+    "lon": 51.3753,
+    "cat": "travel"
+  },
+  {
+    "id": "poi_tajrish",
+    "title": "تجریش",
+    "subtitle": "شمیرانات",
+    "lat": 35.8044,
+    "lon": 51.434,
+    "cat": "shopping"
+  },
+  {
+    "id": "poi_enghelab",
+    "title": "میدان انقلاب",
+    "subtitle": "تهران",
+    "lat": 35.7011,
+    "lon": 51.39,
+    "cat": "other"
+  },
+  {
+    "id": "poi_valiasr",
+    "title": "چهارراه ولیعصر",
+    "subtitle": "تهران",
+    "lat": 35.7219,
+    "lon": 51.4056,
+    "cat": "other"
+  },
+  {
+    "id": "poi_hospital",
+    "title": "بیمارستان شریعتی",
+    "subtitle": "تهران",
+    "lat": 35.7225,
+    "lon": 51.387,
+    "cat": "hospital"
+  },
+  {
+    "id": "poi_fuel",
+    "title": "پمپ بنزین آزادی",
+    "subtitle": "تهران",
+    "lat": 35.705,
+    "lon": 51.35,
+    "cat": "fuel"
+  },
+  {
+    "id": "poi_park",
+    "title": "پارک لاله",
+    "subtitle": "تهران",
+    "lat": 35.715,
+    "lon": 51.395,
+    "cat": "park"
+  },
+  {
+    "id": "poi_bank",
+    "title": "بانک ملی",
+    "subtitle": "تهران",
+    "lat": 35.71,
+    "lon": 51.41,
+    "cat": "bank"
+  },
+  {
+    "id": "poi_rest",
+    "title": "رستوران سنتی",
+    "subtitle": "تهران",
+    "lat": 35.73,
+    "lon": 51.4,
+    "cat": "restaurant"
+  },
+  {
+    "id": "poi_hotel",
+    "title": "هتل آزادی",
+    "subtitle": "تهران",
+    "lat": 35.74,
+    "lon": 51.38,
+    "cat": "hotel"
+  },
+  {
+    "id": "poi_ev",
+    "title": "شارژر برقی",
+    "subtitle": "تهران",
+    "lat": 35.75,
+    "lon": 51.42,
+    "cat": "evCharge"
+  },
+  {
+    "id": "poi_vanak",
+    "title": "میدان ونک",
+    "subtitle": "تهران",
+    "lat": 35.7575,
+    "lon": 51.41,
+    "cat": "other"
+  },
+  {
+    "id": "poi_taj",
+    "title": "تجریش بازار",
+    "subtitle": "تهران",
+    "lat": 35.801,
+    "lon": 51.43,
+    "cat": "shopping"
+  },
+  {
+    "id": "poi_railway",
+    "title": "ایستگاه راه‌آهن",
+    "subtitle": "تهران",
+    "lat": 35.658,
+    "lon": 51.398,
+    "cat": "travel"
+  },
+  {
+    "id": "poi_airport_mehrabad",
+    "title": "فرودگاه مهرآباد",
+    "subtitle": "تهران",
+    "lat": 35.6892,
+    "lon": 51.3134,
+    "cat": "travel"
+  }
+]
