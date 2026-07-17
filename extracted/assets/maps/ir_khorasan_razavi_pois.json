@@ -1,0 +1,34 @@
+[
+  {
+    "id": "ir_khorasan_razavi_poi_0",
+    "title": "حرم امام رضا",
+    "subtitle": "خراسان رضوی",
+    "lat": 36.287,
+    "lon": 59.615,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_khorasan_razavi_poi_1",
+    "title": "فرودگاه مشهد",
+    "subtitle": "خراسان رضوی",
+    "lat": 36.2352,
+    "lon": 59.641,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_khorasan_razavi_poi_2",
+    "title": "پارک کوهسنگی",
+    "subtitle": "خراسان رضوی",
+    "lat": 36.276,
+    "lon": 59.575,
+    "cat": "park"
+  },
+  {
+    "id": "ir_khorasan_razavi_poi_3",
+    "title": "طرقبه",
+    "subtitle": "خراسان رضوی",
+    "lat": 36.31,
+    "lon": 59.373,
+    "cat": "travel"
+  }
+]
