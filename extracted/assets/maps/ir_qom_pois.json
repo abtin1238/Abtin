@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ir_qom_poi_0",
+    "title": "حرم حضرت معصومه",
+    "subtitle": "قم",
+    "lat": 34.641,
+    "lon": 50.879,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_qom_poi_1",
+    "title": "جمکران",
+    "subtitle": "قم",
+    "lat": 34.585,
+    "lon": 50.91,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_qom_poi_2",
+    "title": "فرودگاه قم",
+    "subtitle": "قم",
+    "lat": 34.59,
+    "lon": 50.88,
+    "cat": "travel"
+  }
+]

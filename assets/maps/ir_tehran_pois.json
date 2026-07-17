@@ -1,0 +1,66 @@
+[
+  {
+    "id": "ir_tehran_poi_0",
+    "title": "میدان آزادی",
+    "subtitle": "تهران",
+    "lat": 35.6997,
+    "lon": 51.3381,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_tehran_poi_1",
+    "title": "برج میلاد",
+    "subtitle": "تهران",
+    "lat": 35.7448,
+    "lon": 51.3753,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_tehran_poi_2",
+    "title": "تجریش",
+    "subtitle": "تهران",
+    "lat": 35.8044,
+    "lon": 51.434,
+    "cat": "shopping"
+  },
+  {
+    "id": "ir_tehran_poi_3",
+    "title": "میدان انقلاب",
+    "subtitle": "تهران",
+    "lat": 35.7011,
+    "lon": 51.39,
+    "cat": "other"
+  },
+  {
+    "id": "ir_tehran_poi_4",
+    "title": "چهارراه ولیعصر",
+    "subtitle": "تهران",
+    "lat": 35.7219,
+    "lon": 51.4056,
+    "cat": "other"
+  },
+  {
+    "id": "ir_tehran_poi_5",
+    "title": "ونک",
+    "subtitle": "تهران",
+    "lat": 35.7575,
+    "lon": 51.41,
+    "cat": "other"
+  },
+  {
+    "id": "ir_tehran_poi_6",
+    "title": "راه‌آهن",
+    "subtitle": "تهران",
+    "lat": 35.658,
+    "lon": 51.398,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_tehran_poi_7",
+    "title": "مهرآباد",
+    "subtitle": "تهران",
+    "lat": 35.6892,
+    "lon": 51.3134,
+    "cat": "travel"
+  }
+]

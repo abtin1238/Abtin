@@ -1,0 +1,34 @@
+[
+  {
+    "id": "ir_khuzestan_poi_0",
+    "title": "پل سفید اهواز",
+    "subtitle": "خوزستان",
+    "lat": 31.318,
+    "lon": 48.67,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_khuzestan_poi_1",
+    "title": "فرودگاه اهواز",
+    "subtitle": "خوزستان",
+    "lat": 31.337,
+    "lon": 48.762,
+    "cat": "travel"
+  },
+  {
+    "id": "ir_khuzestan_poi_2",
+    "title": "کوی گلستان",
+    "subtitle": "خوزستان",
+    "lat": 31.35,
+    "lon": 48.65,
+    "cat": "other"
+  },
+  {
+    "id": "ir_khuzestan_poi_3",
+    "title": "کارون",
+    "subtitle": "خوزستان",
+    "lat": 31.31,
+    "lon": 48.68,
+    "cat": "other"
+  }
+]
