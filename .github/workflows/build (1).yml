@@ -25,16 +25,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Download Vazirmatn fonts
-        run: |
-          mkdir -p assets/fonts
-          curl -L -o vazirmatn.zip https://github.com/rastikerdar/vazirmatn/releases/latest/download/vazirmatn-font-face.zip
-          unzip -o vazirmatn.zip -d vazirmatn_tmp
-          find vazirmatn_tmp -iname "Vazirmatn-Regular.ttf" -exec cp {} assets/fonts/ \;
-          find vazirmatn_tmp -iname "Vazirmatn-Medium.ttf" -exec cp {} assets/fonts/ \;
-          find vazirmatn_tmp -iname "Vazirmatn-Bold.ttf" -exec cp {} assets/fonts/ \;
-          find vazirmatn_tmp -iname "Vazirmatn-ExtraBold.ttf" -exec cp {} assets/fonts/ \;
-          ls -la assets/fonts/
+      
 
       - name: Flutter pub get
         run: flutter pub get
