@@ -11,8 +11,8 @@ dependencies:
     sdk: flutter
 
   # --- Map engine (Native, GPU-accelerated, vector tiles, 3D) ---
-  # نسخه را بعد از `flutter pub get` روی آخرین نسخه‌ی پایدار قفل کنید.
-  maplibre_gl: ^0.20.0
+  # آپدیت شده به نسخه‌ی جدیدتر برای سازگاری با Flutter 3.x
+  maplibre_gl: ^0.26.2
 
   # --- State management / DI ---
   flutter_riverpod: ^2.5.1
