@@ -1,0 +1,103 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+android/app/debug
+android/app/profile
+android/app/release
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/**/GeneratedPluginRegistrant.java
+android/key.properties
+*.jks
+
+# iOS
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.*
+ios/Pods/
+ios/.symlinks/
+ios/**/dgph
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.hmap
+*.ipa
+*.xcworkspace/
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Exceptions for iOS
+!ios/.gitkeep
+!ios/Podfile
+!ios/Podfile.lock
+!ios/Runner/
+!ios/Runner.xcodeproj/
+!ios/Runner.xcworkspace/
+
+# Web
+web/
+
+# Coverage
+coverage/
+
+# Exceptions
+!**/ios/**/default.mode1v3
+!**/ios/**/default.mode2v3
+!**/ios/**/default.pbxuser
+!**/ios/**/default.perspectivev3
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Build runner
+*.g.dart
+*.freezed.dart
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Misc
+*.swp
+.DS_Store
+.atom/
+.history
+.svn/
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Backup files
+*~
+*.bak
+*.tmp
+*.orig
+
+# Log files
+*.log
