@@ -96,7 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               initialCameraPosition: _initialCamera,
               myLocationEnabled: false, // نقطه‌ی داخلی MapLibre را خاموش می‌کنیم؛ خودمان VehicleMarker داریم
               compassEnabled: false, // کامپس سفارشی خودمان را نمایش می‌دهیم
-              onMapCreated: (controller) => _mapController = controller,
+              onMapCreated: _onMapCreated,
               onMapClick: (point, latLng) {
                 // ===== مسیریابی از طریق لمس نقشه =====
                 ref.read(selectedDestinationProvider.notifier).state =
@@ -112,15 +112,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
 
           // ===== مارکر خودرو/پیکان روی نقشه (پیرو GPS واقعی) =====
-          vehiclePositionAsync.when(
-            data: (pos) => VehicleMarker(
-              mapController: _mapController,
-              position: LatLng(pos.lat, pos.lng),
-              headingDeg: pos.headingDeg,
-              vehicle: selectedVehicle,
-            ),
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+          // همیشه نمایش داده می‌شود؛ تا وقتی GPS قفل نشده روی موقعیت اولیه نشان داده می‌شود
+          Builder(
+            builder: (_) {
+              final pos = vehiclePositionAsync.valueOrNull;
+              final markerPos =
+                  pos != null ? LatLng(pos.lat, pos.lng) : _initialCamera.target;
+              return VehicleMarker(
+                mapController: _mapController,
+                position: markerPos,
+                headingDeg: pos?.headingDeg ?? 0,
+                vehicle: selectedVehicle,
+              );
+            },
           ),
 
           // ===== مارکر مقصد (از لمس نقشه یا دیپ‌لینک) =====
@@ -220,6 +224,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
     );
+  }
+
+  /// راه‌اندازی کنترلر نقشه
+  void _onMapCreated(MapLibreMapController controller) {
+    _mapController = controller;
+    // با هر حرکت دوربین (زوم/جابجایی/چرخش) مارکرهای Overlay بازموقعیت‌دهی شوند
+    controller.addListener(_onCameraMoved);
+    // rebuild تا mapController به VehicleMarker/DestinationPin برسد و پوینتر ظاهر شود
+    if (mounted) setState(() {});
+  }
+
+  /// با حرکت دوربین، مختصات صفحه‌ی مارکرها را به‌روزرسانی می‌کنیم
+  void _onCameraMoved() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _mapController?.removeListener(_onCameraMoved);
+    super.dispose();
   }
 
   /// شروع مسیریابی
@@ -422,27 +446,49 @@ class _GpsWarningBanner extends StatelessWidget {
   }
 }
 
-class _DestinationPin extends StatelessWidget {
+class _DestinationPin extends StatefulWidget {
   final MapLibreMapController? mapController;
   final LatLng point;
   const _DestinationPin({required this.mapController, required this.point});
 
   @override
+  State<_DestinationPin> createState() => _DestinationPinState();
+}
+
+class _DestinationPinState extends State<_DestinationPin> {
+  math.Point<num>? _screen;
+
+  @override
+  void initState() {
+    super.initState();
+    _update();
+  }
+
+  @override
+  void didUpdateWidget(covariant _DestinationPin oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _update();
+  }
+
+  Future<void> _update() async {
+    final controller = widget.mapController;
+    if (controller == null) return;
+    try {
+      final s = await controller.toScreenLocation(widget.point);
+      if (mounted) setState(() => _screen = s);
+    } catch (_) {}
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (mapController == null) return const SizedBox.shrink();
-    return FutureBuilder<math.Point<num>>(
-      future: mapController!.toScreenLocation(point),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
-        final s = snapshot.data!;
-        return Positioned(
-          left: s.x.toDouble() - 16,
-          top: s.y.toDouble() - 32,
-          child: const IgnorePointer(
-            child: Icon(Icons.location_on_rounded, color: AppColors.subAccentB, size: 32),
-          ),
-        );
-      },
+    final s = _screen;
+    if (s == null) return const SizedBox.shrink();
+    return Positioned(
+      left: s.x.toDouble() - 16,
+      top: s.y.toDouble() - 32,
+      child: const IgnorePointer(
+        child: Icon(Icons.location_on_rounded, color: AppColors.subAccentB, size: 32),
+      ),
     );
   }
 }

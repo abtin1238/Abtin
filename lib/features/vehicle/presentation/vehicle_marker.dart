@@ -15,7 +15,7 @@ import 'vehicle_provider.dart';
 /// برای حالت خودروی سه‌بعدی (GLB)، این ویجت فعلاً یک آیکون دوبعدی نشان می‌دهد؛
 /// رندر واقعی مدل روی صحنه سه‌بعدی نقشه به یک لایه‌ی Native اختصاصی نیاز دارد
 /// (فاز بعد).
-class VehicleMarker extends StatelessWidget {
+class VehicleMarker extends StatefulWidget {
   final MapLibreMapController? mapController;
   final LatLng position;
   final double headingDeg;
@@ -30,27 +30,51 @@ class VehicleMarker extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    if (mapController == null) return const SizedBox.shrink();
+  State<VehicleMarker> createState() => _VehicleMarkerState();
+}
 
-    return FutureBuilder<Point<num>>(
-      future: mapController!.toScreenLocation(position),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
-        final screen = snapshot.data!;
-        return Positioned(
-          left: screen.x.toDouble() - 22,
-          top: screen.y.toDouble() - 22,
-          child: IgnorePointer(
-            child: Transform.rotate(
-              angle: headingDeg * 3.1415926535 / 180,
-              child: vehicle == VehicleType.arrow
-                  ? _ArrowIcon()
-                  : _CarIcon(),
-            ),
-          ),
-        );
-      },
+class _VehicleMarkerState extends State<VehicleMarker> {
+  Point<num>? _screen;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateScreenLocation();
+  }
+
+  @override
+  void didUpdateWidget(covariant VehicleMarker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // با تغییر موقعیت خودرو یا حرکت دوربین (که باعث rebuild والد می‌شود) دوباره محاسبه کن
+    _updateScreenLocation();
+  }
+
+  Future<void> _updateScreenLocation() async {
+    final controller = widget.mapController;
+    if (controller == null) return;
+    try {
+      final s = await controller.toScreenLocation(widget.position);
+      if (mounted) setState(() => _screen = s);
+    } catch (_) {
+      // نقشه هنوز آماده نیست؛ نادیده بگیر
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = _screen;
+    if (s == null) return const SizedBox.shrink();
+    return Positioned(
+      left: s.x.toDouble() - 22,
+      top: s.y.toDouble() - 22,
+      child: IgnorePointer(
+        child: Transform.rotate(
+          angle: widget.headingDeg * 3.1415926535 / 180,
+          child: widget.vehicle == VehicleType.arrow
+              ? _ArrowIcon()
+              : _CarIcon(),
+        ),
+      ),
     );
   }
 }
