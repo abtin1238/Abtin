@@ -31,8 +31,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _cameraFollowsVehicle = true;
   Line? _routeLine; // خط مسیر روی نقشه
 
+  // استایل نقشه‌ی تیره‌ی حرفه‌ای از OpenFreeMap (رایگان، بدون نیاز به API Key،
+  // بر پایه‌ی داده‌های OpenStreetMap با خیابان‌ها و ساختمان‌های سه‌بعدی).
   static const String _demoStyleUrl =
-      'https://demotiles.maplibre.org/style.json';
+      'https://tiles.openfreemap.org/styles/dark';
 
   static const CameraPosition _initialCamera = CameraPosition(
     target: LatLng(35.6997, 51.3380), // تهران، میدان آزادی — نمونه، تا GPS برسد
