@@ -5,6 +5,7 @@ import '../../features/routes/presentation/routes_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/voice_settings/presentation/voice_settings_screen.dart';
 import '../../features/saved_places/presentation/saved_places_screen.dart';
+import '../../features/offline_maps/presentation/map_settings_screen.dart';
 
 /// مسیرهای این روتر همان مسیرهایی هستند که Deep Link هم به آن‌ها وصل می‌شود
 /// (مثال: abtin://navigate?lat=..&lng=.. بعداً به '/'
@@ -23,6 +24,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/saved-places',
       builder: (context, state) => const SavedPlacesScreen(),
+    ),
+    GoRoute(
+      path: '/map-settings',
+      builder: (context, state) => const MapSettingsScreen(),
     ),
   ],
 );

@@ -63,7 +63,7 @@ class SettingsScreen extends ConsumerWidget {
                       const Text('مسیریابی و ناوبری',
                           style: TextStyle(color: AppColors.subAccentB, fontWeight: FontWeight.bold, fontSize: 15)),
                       const SizedBox(height: 6),
-                      _MenuRow(icon: Icons.map_rounded, label: 'تنظیمات نقشه', onTap: () => context.go('/search')),
+                      _MenuRow(icon: Icons.map_rounded, label: 'تنظیمات نقشه', desc: 'دانلود نقشه آفلاین استانی', chevron: true, onTap: () => context.go('/map-settings')),
                       const _MenuRow(icon: Icons.brightness_6_rounded, label: 'نمای شب و روز'),
                       _MenuRow(
                         icon: Icons.record_voice_over_rounded,
