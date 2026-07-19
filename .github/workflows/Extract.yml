@@ -19,9 +19,7 @@ jobs:
           mkdir extracted
           unzip -o *.zip -d extracted
 
-      - name: Copy extracted files
-        run: |
-          cp -r extracted/* .
+      
 
       - name: Commit changes
         run: |
