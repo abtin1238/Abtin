@@ -23,6 +23,7 @@ class ActiveNavigation {
   final NavigationState state;
   final int currentInstructionIndex;
   final double remainingDistanceKm;
+  final double distanceToNextManeuverM; // فاصله تا پیچ بعدی (متر)
   final String? errorMessage;
 
   const ActiveNavigation({
@@ -30,6 +31,7 @@ class ActiveNavigation {
     this.state = NavigationState.navigating,
     this.currentInstructionIndex = 0,
     required this.remainingDistanceKm,
+    this.distanceToNextManeuverM = 0,
     this.errorMessage,
   });
 
@@ -38,6 +40,7 @@ class ActiveNavigation {
     NavigationState? state,
     int? currentInstructionIndex,
     double? remainingDistanceKm,
+    double? distanceToNextManeuverM,
     String? errorMessage,
   }) {
     return ActiveNavigation(
@@ -45,6 +48,7 @@ class ActiveNavigation {
       state: state ?? this.state,
       currentInstructionIndex: currentInstructionIndex ?? this.currentInstructionIndex,
       remainingDistanceKm: remainingDistanceKm ?? this.remainingDistanceKm,
+      distanceToNextManeuverM: distanceToNextManeuverM ?? this.distanceToNextManeuverM,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
@@ -69,11 +73,13 @@ class ActiveNavigationNotifier extends StateNotifier<ActiveNavigation?> {
     state = nav;
   }
 
-  void updateProgress(int instructionIndex, double remainingDistance) {
+  void updateProgress(int instructionIndex, double remainingDistance,
+      {double? distanceToNextManeuverM}) {
     if (state != null) {
       state = state!.copyWith(
         currentInstructionIndex: instructionIndex,
         remainingDistanceKm: remainingDistance,
+        distanceToNextManeuverM: distanceToNextManeuverM,
       );
     }
   }

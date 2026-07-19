@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -105,71 +106,108 @@ class RoutingService {
     }
   }
 
+  /// مسیر جایگزینِ ساده (خط مستقیم) — وقتی اینترنت/سرور OSRM در دسترس نیست
+  /// (حالت آفلاین). فقط جهت کلی به سمت مقصد را می‌دهد، نه مسیر واقعی جاده‌ها.
+  RouteInfo straightLineFallback(LatLng origin, LatLng destination) {
+    final distanceM = _haversine(origin, destination);
+    return RouteInfo(
+      geometry: [origin, destination],
+      distanceKm: distanceM / 1000,
+      durationMin: (distanceM / 1000) / 45 * 60, // فرض سرعت میانگین ۴۵ km/h
+      instructions: [
+        RouteInstruction(
+          text: 'به سمت مقصد حرکت کنید (مسیر آفلاین تقریبی)',
+          distanceMeters: distanceM,
+          location: origin,
+          type: 'depart',
+        ),
+        RouteInstruction(
+          text: 'به مقصد رسیدید',
+          distanceMeters: 0,
+          location: destination,
+          type: 'arrive',
+        ),
+      ],
+    );
+  }
+
+  double _haversine(LatLng a, LatLng b) {
+    const r = 6371000.0;
+    final dLat = (b.latitude - a.latitude) * math.pi / 180;
+    final dLng = (b.longitude - a.longitude) * math.pi / 180;
+    final la1 = a.latitude * math.pi / 180;
+    final la2 = b.latitude * math.pi / 180;
+    final h = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(la1) * math.cos(la2) * math.sin(dLng / 2) * math.sin(dLng / 2);
+    return r * 2 * math.atan2(math.sqrt(h), math.sqrt(1 - h));
+  }
+
   /// تبدیل دستور انگلیسی OSRM به فارسی
   String _convertInstructionToPersian(Map<String, dynamic> step) {
     final maneuver = step['maneuver'];
     final type = maneuver['type'] as String? ?? '';
     final modifier = maneuver['modifier'] as String? ?? '';
-    final distance = (step['distance'] as num).toDouble();
     final name = step['name'] as String? ?? '';
+    final exit = maneuver['exit'];
 
     // دستورات پایه
     if (type == 'depart') {
       return 'حرکت کنید${name.isNotEmpty ? ' در $name' : ''}';
     }
-    
     if (type == 'arrive') {
-      return 'به مقصد رسیدید';
+      return name.isNotEmpty ? 'به مقصد رسیدید ($name)' : 'به مقصد رسیدید';
     }
 
-    // پیچ‌ها
+    // میدان‌ها: خروجی چندم را هم بگو
+    if (type == 'roundabout' || type == 'rotary') {
+      final exitText = (exit is num) ? ' و از خروجی ${_ordinalFa(exit.toInt())} خارج شوید' : '';
+      final nameText = name.isNotEmpty ? ' به $name' : '';
+      return 'وارد میدان شوید$exitText$nameText'.trim();
+    }
+
+    // جهت پیچ — مهم: حالت‌های sharp/slight را قبل از حالت ساده بررسی کن
     String direction = '';
-    if (modifier.contains('right')) {
-      direction = 'راست';
-    } else if (modifier.contains('left')) {
-      direction = 'چپ';
-    } else if (modifier.contains('straight')) {
-      direction = 'مستقیم';
+    if (modifier.contains('sharp right')) {
+      direction = 'کاملاً به راست';
+    } else if (modifier.contains('sharp left')) {
+      direction = 'کاملاً به چپ';
     } else if (modifier.contains('slight right')) {
       direction = 'کمی به راست';
     } else if (modifier.contains('slight left')) {
       direction = 'کمی به چپ';
-    } else if (modifier.contains('sharp right')) {
-      direction = 'کاملاً به راست';
-    } else if (modifier.contains('sharp left')) {
-      direction = 'کاملاً به چپ';
     } else if (modifier.contains('uturn')) {
       direction = 'دور بزنید';
+    } else if (modifier.contains('right')) {
+      direction = 'به راست';
+    } else if (modifier.contains('left')) {
+      direction = 'به چپ';
+    } else if (modifier.contains('straight')) {
+      direction = 'مستقیم';
     }
 
     String action = '';
     if (type == 'turn') {
       action = 'بپیچید';
-    } else if (type == 'new name') {
-      action = 'ادامه دهید';
-    } else if (type == 'continue') {
+    } else if (type == 'new name' || type == 'continue') {
       action = 'ادامه دهید';
     } else if (type == 'merge') {
       action = 'ادغام شوید';
     } else if (type == 'on ramp' || type == 'off ramp') {
       action = 'وارد شوید';
     } else if (type == 'fork') {
-      action = 'انتخاب کنید';
-    } else if (type == 'roundabout' || type == 'rotary') {
-      action = 'وارد میدان شوید';
+      action = 'مسیر را انتخاب کنید';
+    } else if (type == 'end of road') {
+      action = 'در انتهای خیابان بپیچید';
     }
-
-    String distanceText = '';
-    if (distance > 1000) {
-      distanceText = 'بعد از ${(distance / 1000).toStringAsFixed(1)} کیلومتر';
-    } else if (distance > 100) {
-      distanceText = 'بعد از ${distance.round()} متر';
-    } else if (distance > 0) {
-      distanceText = 'بعد از ${distance.round()} متر';
-    }
+    if (action.isEmpty) action = 'ادامه دهید';
 
     final nameText = name.isNotEmpty ? ' به $name' : '';
-    
-    return '$distanceText $action $direction$nameText'.trim();
+    return '$action $direction$nameText'.trim();
+  }
+
+  /// شماره‌ی ترتیبی فارسی برای خروجی میدان
+  String _ordinalFa(int n) {
+    const words = ['', 'اول', 'دوم', 'سوم', 'چهارم', 'پنجم', 'ششم', 'هفتم', 'هشتم'];
+    return (n >= 1 && n < words.length) ? words[n] : '$n';
   }
 }

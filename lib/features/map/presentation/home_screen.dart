@@ -253,22 +253,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // محاسبه مسیر
     final routingService = ref.read(routingServiceProvider);
-    final route = await routingService.calculateRoute(
-      origin: LatLng(vehiclePosition.lat, vehiclePosition.lng),
+    final origin = LatLng(vehiclePosition.lat, vehiclePosition.lng);
+    var route = await routingService.calculateRoute(
+      origin: origin,
       destination: destination.point,
     );
 
+    // اگر سرور مسیریابی در دسترس نبود (حالت آفلاین) → مسیر تقریبی خط مستقیم
     if (route == null) {
-      // نمایش پیام خطا
+      route = routingService.straightLineFallback(origin, destination.point);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('خطا در محاسبه مسیر. لطفاً دوباره تلاش کنید.'),
-            backgroundColor: Colors.red,
+            content: Text('اتصال به سرور مسیریابی برقرار نشد؛ مسیر تقریبی آفلاین نمایش داده می‌شود.'),
+            backgroundColor: Colors.orange,
           ),
         );
       }
-      return;
     }
 
     // رسم خط مسیر روی نقشه
@@ -353,14 +354,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       remainingDistance += nav.route.instructions[i].distanceMeters;
     }
 
-    // به‌روزرسانی وضعیت
-    if (nearestInstructionIndex != nav.currentInstructionIndex || 
-        (remainingDistance / 1000 - nav.remainingDistanceKm).abs() > 0.1) {
-      ref.read(activeNavigationProvider.notifier).updateProgress(
-        nearestInstructionIndex,
-        remainingDistance / 1000,
-      );
-    }
+    // فاصله تا پیچ بعدی (موقعیت دستور فعلی)
+    final nextLoc = nav.route.instructions[nearestInstructionIndex].location;
+    final distToNext = _calculateDistance(currentLoc, nextLoc);
+
+    // به‌روزرسانی وضعیت (زنده — تا فاصله‌ی پیچ بعدی مدام کم شود)
+    ref.read(activeNavigationProvider.notifier).updateProgress(
+      nearestInstructionIndex,
+      remainingDistance / 1000,
+      distanceToNextManeuverM: distToNext,
+    );
 
     // بررسی رسیدن به مقصد
     if (minDistance < 20 && nearestInstructionIndex >= nav.route.instructions.length - 1) {
@@ -723,6 +726,10 @@ class _ActiveNavigationCard extends StatelessWidget {
     final instruction = navigation.currentInstruction;
     final remainingKm = navigation.remainingDistanceKm;
     final remainingMin = (navigation.route.durationMin * (remainingKm / navigation.route.distanceKm)).round();
+    final dNext = navigation.distanceToNextManeuverM;
+    final nextText = dNext >= 1000
+        ? '${(dNext / 1000).toStringAsFixed(1)} کیلومتر'
+        : '${dNext.round()} متر';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -754,14 +761,28 @@ class _ActiveNavigationCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  instruction.text,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (dNext > 0)
+                      Text(
+                        'بعد از $nextText',
+                        style: const TextStyle(
+                          color: AppColors.homeAccent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    Text(
+                      instruction.text,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
