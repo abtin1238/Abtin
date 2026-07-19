@@ -142,19 +142,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             error: (_, __) => const SizedBox.shrink(),
           ),
 
-          // ===== کارت دستور بعدی (بالای صفحه) — وقتی مقصدی انتخاب نشده صرفاً نمونه‌ی UI است =====
-          if (destination == null && activeNav == null)
-            const Positioned(top: 16, left: 24, right: 24, child: _InstructionCard()),
-
-          // ===== کارت مسیریابی فعال (دستور پیچ‌به‌پیچ) =====
-          if (activeNav != null)
-            Positioned(
-              top: 16,
-              left: 24,
-              right: 24,
-              child: _ActiveNavigationCard(navigation: activeNav),
-            ),
-
           // ===== کارت مقصدِ انتخاب‌شده (وقتی کاربر روی نقشه لمس کرده یا دیپ‌لینک آمده) =====
           if (destination != null && activeNav == null)
             Positioned(
@@ -223,6 +210,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // ===== ناوبری پایین (تم سبز، چون صفحه اصلی است) =====
           const BottomNav(currentPage: NavKey.home, isHomePage: true),
+
+          // ===== کارت مسیریابی فعال (دستور پیچ‌به‌پیچ) — بالاترین z-index، بالای همه‌ی پنجره‌ها =====
+          if (activeNav != null)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10,
+              left: 16,
+              right: 16,
+              child: _ActiveNavigationCard(navigation: activeNav),
+            ),
         ],
       ),
     );
@@ -545,37 +541,6 @@ class _DestinationCard extends StatelessWidget {
                 'شروع مسیریابی',
                 style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InstructionCard extends StatelessWidget {
-  const _InstructionCard();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(.5),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(.06)),
-        boxShadow: const [
-          BoxShadow(color: Colors.black54, blurRadius: 30, offset: Offset(0, 10)),
-        ],
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.touch_app_rounded, color: AppColors.homeAccent, size: 22),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'برای مسیریابی، روی نقشه لمس کنید یا از جستجو استفاده کنید.',
-              textAlign: TextAlign.right,
-              style: TextStyle(color: Colors.white, fontSize: 13),
             ),
           ),
         ],
