@@ -1,5 +1,4 @@
 name: Extract ZIP and Build APK
-
 on:
   push:
     branches: [ main, master ]
@@ -12,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,26 +20,26 @@ jobs:
           shopt -s nullglob
           zips=(*.zip)
           if [ ${#zips[@]} -eq 0 ]; then
-            echo "No .zip file found in repo root — nothing to extract."
+            echo "No .zip file found in repo root - nothing to extract."
             exit 0
           fi
+          mkdir -p _extracted
           for z in "${zips[@]}"; do
             echo "Extracting: $z"
-            mkdir -p _extracted
             unzip -o "$z" -d _extracted
           done
-          # اگر زیپ یک پوشه‌ی تکی در ریشه داشت (مثل Abtin-master/...)، محتوایش را
-          # یک سطح بالا می‌آوریم تا مستقیم در ریشه‌ی ریپو قرار بگیرد.
+
+          # If the zip contained a single top-level folder, use its contents
           entries=(_extracted/*)
           if [ ${#entries[@]} -eq 1 ] && [ -d "${entries[0]}" ]; then
             SRC="${entries[0]}"
           else
             SRC="_extracted"
           fi
-          # فایل‌های .github/workflows را دست نمی‌زنیم: GITHUB_TOKEN پیش‌فرض
-          # اصلاً اجازه‌ی commit روی این مسیر را ندارد (محدودیت امنیتی گیت‌هاب)
-          # و چون این فایل‌ها از قبل در ریپو هستند، نیازی هم به آن نیست.
+
+          # Never overwrite the workflow files themselves
           rm -rf "$SRC/.github"
+
           cp -r "$SRC"/. .
           rm -rf _extracted
           rm -f *.zip
@@ -51,7 +49,7 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add -A
-          git commit -m "Extract project from zip [skip build-loop]" || echo "Nothing to commit"
+          git commit -m "Extract project from zip [skip ci]" || echo "Nothing to commit"
           git push
 
       - name: Set up JDK 21
@@ -73,7 +71,7 @@ jobs:
       - name: Run build_runner (drift codegen)
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Decode release keystore (اگر Secret تنظیم شده باشد)
+      - name: Decode release keystore
         if: ${{ secrets.ABTIN_KEYSTORE_BASE64 != '' }}
         env:
           ABTIN_KEYSTORE_BASE64: ${{ secrets.ABTIN_KEYSTORE_BASE64 }}
@@ -81,6 +79,19 @@ jobs:
           echo "$ABTIN_KEYSTORE_BASE64" | base64 -d > android/app/release.keystore.jks
           echo "ABTIN_KEYSTORE_PATH=android/app/release.keystore.jks" >> "$GITHUB_ENV"
 
+      - name: Build APK (release)
+        env:
+          ABTIN_KEYSTORE_PASSWORD: ${{ secrets.ABTIN_KEYSTORE_PASSWORD }}
+          ABTIN_KEY_ALIAS: ${{ secrets.ABTIN_KEY_ALIAS }}
+          ABTIN_KEY_PASSWORD: ${{ secrets.ABTIN_KEY_PASSWORD }}
+          ABTIN_VERSION_CODE: ${{ github.run_number }}
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: abtin-navigator-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
       - name: Build APK (release)
         env:
           # اگر این سه‌تا Secret در تنظیمات ریپو ست شده باشند، امضای هر بیلد با
