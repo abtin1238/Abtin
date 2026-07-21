@@ -77,15 +77,15 @@ class _BottomNavState extends State<BottomNav> {
   String _labelFor(NavKey key) {
     switch (key) {
       case NavKey.routes:
-        return 'مسیرها';
+        return '';
       case NavKey.search:
-        return 'جستجو';
+        return '';
       case NavKey.home:
         return '';
       case NavKey.voice:
-        return 'صدا';
+        return '';
       case NavKey.settings:
-        return 'تنظیمات';
+        return '';
     }
   }
 
@@ -128,112 +128,105 @@ class _BottomNavState extends State<BottomNav> {
           clipBehavior: Clip.none,
           alignment: Alignment.bottomCenter,
           children: [
-            // لایه بک‌گراند: عکس نوار با برآمدگی وسط — با margin افقی تا
-            // عرضش کمتر از عرض کامل صفحه باشد (باریک‌تر، طبق عکس مرجع)
+            // لایه بک‌گراند: گرادیانت تیره (نه سبز) — طبق عکس مرجع
             Positioned(
               left: _horizontalMargin,
               right: _horizontalMargin,
               bottom: bottomSafe,
-              child: Image.asset(
-                'assets/images/bottom_nav_bg.png',
-                fit: BoxFit.fill,
+              child: Container(
                 height: _imageHeight,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF1a2a3a),
+                      Color(0xFF0f1a28),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
               ),
             ),
-            // لایه آیکون‌ها + برچسب — روی ناحیه‌ی صاف نوار می‌نشیند، فقط
-            // آیتم وسط به داخل برآمدگی بالا می‌رود
+            // لایه آیکون‌ها — بدون متن، آیکون‌ها پایین‌تر
             Positioned(
               left: _horizontalMargin + 10,
               right: _horizontalMargin + 10,
-              bottom: bottomSafe + 8,
-              // نکته مهم (رفع باگ «ترتیب آیکون‌ها برعکس شده»): چون کل اپ با
-              // Directionality.rtl کار می‌کند، یک Row معمولی این ردیف را
-              // به‌صورت خودکار آینه می‌کند (اولین آیتم لیست سمت راست ظاهر
-              // می‌شود، نه چپ) که ترتیب را برخلاف طرح مرجع می‌کرد. اینجا با
-              // یک Directionality.ltr مستقل، ترتیب همیشه دقیقاً برابر با
-              // ترتیب _defaultOrder (مسیرها → جستجو → خانه → صدا → تنظیمات
-              // از چپ به راست) می‌ماند.
+              bottom: bottomSafe + 2, // پایین‌تر از قبل
               child: Directionality(
                 textDirection: TextDirection.ltr,
                 child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: order.map((key) {
-                  final isActive = order.indexOf(key) == _centerSlot;
-                  final isMuted = key == NavKey.voice && voiceMuted;
-                  return GestureDetector(
-                    onTap: () => _onTap(key),
-                    behavior: HitTestBehavior.opaque,
-                    child: SizedBox(
-                      width: 60,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            // آیکون‌ها بزرگ‌تر شدند (طبق درخواست): غیرفعال
-                            // از ۳۸ به ۴۴، فعال (وسط) از ۵۴ به ۶۰.
-                            width: isActive ? 60 : 44,
-                            height: isActive ? 60 : 44,
-                            // نکته (رفع باگ «دکمه‌ی وسط جایش خوب نیست»):
-                            // چون بار کوتاه‌تر شده، دکمه‌ی وسط هم دیگر لازم
-                            // نیست به‌اندازه‌ی قبل (۳۰px) بالا برود؛ فقط
-                            // به‌اندازه‌ای بالا می‌رود که دقیقاً وسط برآمدگی
-                            // عکس بنشیند، نه بالاتر از آن.
-                            transform: isActive
-                                ? (Matrix4.identity()..translate(0.0, -22.0))
-                                : Matrix4.identity(),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isActive
-                                  ? (widget.isHomePage ? activeColor : null)
-                                  : Colors.transparent,
-                              gradient:
-                                  isActive && !widget.isHomePage ? activeGradient : null,
-                              border: isActive
-                                  ? Border.all(color: const Color(0xFF0E1219), width: 4)
-                                  : null,
-                              boxShadow: isActive
-                                  ? [
-                                      BoxShadow(
-                                        color: (widget.isHomePage
-                                                ? AppColors.homeAccent
-                                                : AppColors.subAccentB)
-                                            .withOpacity(.55),
-                                        blurRadius: 18,
-                                        spreadRadius: 1,
-                                      )
-                                    ]
-                                  : null,
-                            ),
-                            child: Icon(
-                              _iconFor(key),
-                              size: isActive ? 28 : 24,
-                              color: isMuted
-                                  ? AppColors.homeDanger
-                                  : (isActive
-                                      ? (widget.isHomePage
-                                          ? const Color(0xFF0D1A12)
-                                          : Colors.white)
-                                      : const Color(0xFFC7CCD1)),
-                            ),
-                          ),
-                          if (!isActive) ...[
-                            const SizedBox(height: 3),
-                            Text(
-                              _labelFor(key),
-                              style: const TextStyle(
-                                color: Color(0xFFC7CCD1),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: order.map((key) {
+                    final isActive = order.indexOf(key) == _centerSlot;
+                    final isMuted = key == NavKey.voice && voiceMuted;
+                    return GestureDetector(
+                      onTap: () => _onTap(key),
+                      behavior: HitTestBehavior.opaque,
+                      child: SizedBox(
+                        width: 60,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: isActive ? 60 : 44,
+                              height: isActive ? 60 : 44,
+                              transform: isActive
+                                  ? (Matrix4.identity()..translate(0.0, -22.0))
+                                  : Matrix4.identity(),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isActive
+                                    ? (widget.isHomePage ? activeColor : null)
+                                    : Colors.transparent,
+                                gradient:
+                                    isActive && !widget.isHomePage ? activeGradient : null,
+                                border: isActive
+                                    ? Border.all(color: const Color(0xFF0E1219), width: 4)
+                                    : null,
+                                boxShadow: isActive
+                                    ? [
+                                        BoxShadow(
+                                          color: (widget.isHomePage
+                                                  ? AppColors.homeAccent
+                                                  : AppColors.subAccentB)
+                                              .withOpacity(.55),
+                                          blurRadius: 18,
+                                          spreadRadius: 1,
+                                        )
+                                      ]
+                                    : null,
+                              ),
+                              child: Icon(
+                                _iconFor(key),
+                                size: isActive ? 28 : 24,
+                                color: isMuted
+                                    ? AppColors.homeDanger
+                                    : (isActive
+                                        ? (widget.isHomePage
+                                            ? const Color(0xFF0D1A12)
+                                            : Colors.white)
+                                        : const Color(0xFFC7CCD1)),
                               ),
                             ),
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
                 ),
               ),
             ),
