@@ -54,6 +54,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     bearing: 0,
   );
 
+  // نقطه ثابت روی صفحه برای پیکان در حالت navigation (وسط، کمی پایین‌تر)
+  late Offset _fixedArrowAnchor;
+
   void _startMapLoadWatchdog() {
     _mapLoadTimeoutTimer?.cancel();
     _showMapRetry = false;
@@ -77,6 +80,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _startMapLoadWatchdog();
+    // محاسبه نقطه ثابت برای پیکان (وسط افقی، کمی پایین‌تر از مرکز عمودی)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final screenSize = MediaQuery.of(context).size;
+        setState(() {
+          _fixedArrowAnchor = Offset(
+            screenSize.width / 2,
+            screenSize.height / 2 + 60,
+          );
+        });
+      }
+    });
   }
 
   @override
@@ -261,8 +276,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
 
           // ===== مارکر مقصد (از لمس نقشه یا دیپ‌لینک) =====
+          // در حالت navigation، پیکان به نقطه‌ی ثابت روی صفحه قفل می‌شود
+          // (مثل Google Maps/Waze) تا مشکل toScreenLocation با tilted camera حل شود
           if (destination != null)
-            _DestinationPin(mapController: _mapController, point: destination.point),
+            _DestinationPin(
+              mapController: _mapController,
+              point: destination.point,
+              isNavigationMode: activeNav != null,
+              fixedAnchor: _fixedArrowAnchor,
+            ),
 
           // ===== بنر وضعیت GPS (مجوز رد شده / سرویس خاموش) =====
           // نکته مهم: از MediaQuery.padding.top استفاده می‌کنیم تا زیر ناچ/نوار
@@ -359,7 +381,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             left: 16,
             child: _SpeedCluster(
               speedKmh: vehiclePositionAsync.valueOrNull?.speedKmh ?? 0,
-              speedLimitKmh: null, // فعلاً منبع داده‌ی محدودیت سرعت متصل نشده؛ وقتی وصل شد این مقدار را بدهید تا تابلو نمایش داده شود
+              speedLimitKmh: null, // فعلاً منبع داده‌ی محدودیت سرعت متصل نشده؛ وقتی وصل شد این مقدار را بدهید تا تابلو نمای[...]
             ),
           ),
 
@@ -700,7 +722,15 @@ class _GpsWarningBanner extends StatelessWidget {
 class _DestinationPin extends StatefulWidget {
   final MapLibreMapController? mapController;
   final LatLng point;
-  const _DestinationPin({required this.mapController, required this.point});
+  final bool isNavigationMode;
+  final Offset fixedAnchor;
+  
+  const _DestinationPin({
+    required this.mapController,
+    required this.point,
+    required this.isNavigationMode,
+    required this.fixedAnchor,
+  });
 
   @override
   State<_DestinationPin> createState() => _DestinationPinState();
@@ -730,12 +760,37 @@ class _DestinationPinState extends State<_DestinationPin> {
   }
 
   Future<void> _update() async {
+    // اگر در حالت navigation هستیم، به جای محاسبه toScreenLocation
+    // (که با tilted camera اشتباه کار می‌کند)، از نقطه‌ی ثابت استفاده کن
+    if (widget.isNavigationMode) {
+      // نقطه ثابت — نقشه می‌چرخد/pan می‌شود، پیکان ثابت می‌ماند
+      if (mounted) {
+        setState(() {
+          _screen = math.Point(widget.fixedAnchor.dx, widget.fixedAnchor.dy);
+        });
+      }
+      return;
+    }
+
+    // حالت عادی: toScreenLocation استفاده کن
     final controller = widget.mapController;
     if (controller == null) return;
     try {
       final s = await controller.toScreenLocation(widget.point);
+      
+      // اضافی check: اگر مختصات خارج صفحه باشد (بدون اینکه null باشد)
+      // یا منفی باشد، fallback به fixed anchor (این حالت نادر است ولی ممکن)
+      if (s == null || s.x < 0 || s.y < 0 || 
+          s.x > MediaQuery.of(context).size.width || 
+          s.y > MediaQuery.of(context).size.height) {
+        return; // پنهان کن
+      }
+      
       if (mounted) setState(() => _screen = s);
-    } catch (_) {}
+    } catch (_) {
+      // در صورت exception، پنهان کن
+      if (mounted) setState(() => _screen = null);
+    }
   }
 
   @override
@@ -998,299 +1053,3 @@ class _RoundIconButton extends StatelessWidget {
     );
   }
 }
-
-/// معادل دقیق .speed-cluster در css: سرعت‌سنج همیشه نمایش داده می‌شود؛
-/// تابلوی محدودیت سرعت فقط وقتی مقدار واقعی موجود باشد نشان داده می‌شود.
-class _SpeedCluster extends StatelessWidget {
-  final double speedKmh;
-  final int? speedLimitKmh;
-  const _SpeedCluster({required this.speedKmh, this.speedLimitKmh});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      height: 96,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // سرعت‌سنج اصلی — همیشه نمایش داده می‌شود
-          Positioned(
-            left: 0,
-            bottom: 0,
-            child: _SpeedometerDial(value: speedKmh.round().toString()),
-          ),
-          // تابلوی محدودیت سرعت — فقط اگر مقدار موجود باشد
-          if (speedLimitKmh != null)
-            Positioned(
-              left: 66,
-              bottom: 34,
-              child: _SpeedLimitSign(value: speedLimitKmh!.toString()),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SpeedometerDial extends StatelessWidget {
-  final String value;
-  const _SpeedometerDial({required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    const size = 96.0;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Image.asset(
-            'assets/images/speedometer.png',
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  shadows: [Shadow(color: Colors.black87, blurRadius: 8, offset: Offset(0, 2))],
-                ),
-              ),
-              const Text(
-                'km/h',
-                style: TextStyle(
-                  color: Color(0xFFDFE3E6),
-                  fontSize: 11,
-                  shadows: [Shadow(color: Colors.black87, blurRadius: 6, offset: Offset(0, 2))],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SpeedLimitSign extends StatelessWidget {
-  final String value;
-  const _SpeedLimitSign({required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    const size = 64.0;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Image.asset(
-            'assets/images/speed-limit.png',
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              shadows: [Shadow(color: Colors.black87, blurRadius: 6, offset: Offset(0, 2))],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-
-/// کارت مسیریابی فعال - نمایش دستور پیچ‌به‌پیچ
-///
-/// طراحی مطابق عکس مرجع کاربر: کارت آبی‌سرمه‌ای تیره با آیکون پیچ سبز درخشان
-/// سمت چپ، فاصله+دستور فعلی سمت راست، یک خط جداکننده، و ردیف پایین شامل
-/// «زمان رسیدن / مسافت مانده / زمان باقی‌مانده» به‌همراه دکمه‌ی ضربدر گوشه‌ی
-/// کارت برای پایان مسیریابی (دیگر دکمه‌ی جداگانه‌ای در پایین صفحه نیست).
-class _ActiveNavigationCard extends StatelessWidget {
-  final ActiveNavigation navigation;
-  final VoidCallback onClose;
-  const _ActiveNavigationCard({required this.navigation, required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    final instruction = navigation.currentInstruction;
-    final remainingKm = navigation.remainingDistanceKm;
-    // اگر مسافت کل مسیر صفر باشد (مثلاً مقصد دقیقاً روی موقعیت فعلی انتخاب شده)،
-    // تقسیم بر صفر باعث NaN و کرش .round() می‌شود؛ در این حالت ۰ دقیقه نمایش می‌دهیم.
-    final remainingMin = navigation.route.distanceKm > 0
-        ? (navigation.route.durationMin * (remainingKm / navigation.route.distanceKm)).round()
-        : 0;
-    final dNext = navigation.distanceToNextManeuverM;
-    final nextText = dNext >= 1000
-        ? '${(dNext / 1000).toStringAsFixed(1)} کیلومتر'
-        : '${dNext.round()} متر';
-
-    // زمان تخمینی رسیدن (ساعت:دقیقه) بر اساس زمان باقی‌مانده
-    final eta = DateTime.now().add(Duration(minutes: remainingMin));
-    final etaText =
-        '${eta.hour.toString().padLeft(2, '0')}:${eta.minute.toString().padLeft(2, '0')}';
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
-      decoration: BoxDecoration(
-        // آبی سرمه‌ای تیره‌ی نیمه‌شفاف، دقیقاً حس‌وحال عکس مرجع
-        color: const Color(0xF0182541),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(.08)),
-        boxShadow: const [
-          BoxShadow(color: Colors.black54, blurRadius: 26, offset: Offset(0, 10)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // ===== ردیف بالا: آیکون پیچ + فاصله/دستور فعلی =====
-          Row(
-            children: [
-              SizedBox(
-                width: 52,
-                height: 52,
-                child: Icon(
-                  _getInstructionIcon(instruction.type),
-                  color: AppColors.homeAccent,
-                  size: 42,
-                  shadows: [
-                    Shadow(color: AppColors.homeAccent.withOpacity(.65), blurRadius: 18),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (dNext > 0)
-                      Text(
-                        nextText,
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(.55),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    const SizedBox(height: 2),
-                    Text(
-                      instruction.text,
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Divider(color: Colors.white.withOpacity(.12), height: 1),
-          const SizedBox(height: 8),
-          // ===== ردیف پایین: زمان رسیدن / مسافت مانده / زمان باقی‌مانده + ضربدر =====
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _NavStat(label: 'زمان رسیدن', value: etaText),
-                    _NavStat(label: 'مسافت مانده', value: '${remainingKm.toStringAsFixed(1)} کیلومتر'),
-                    _NavStat(label: 'زمان باقی‌مانده', value: '$remainingMin دقیقه'),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: onClose,
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(.08),
-                  ),
-                  child: const Icon(Icons.close_rounded, color: Colors.white70, size: 16),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getInstructionIcon(String type) {
-    switch (type) {
-      case 'turn':
-        return Icons.turn_right_rounded;
-      case 'arrive':
-        return Icons.flag_rounded;
-      case 'depart':
-        return Icons.navigation_rounded;
-      case 'merge':
-        return Icons.merge_rounded;
-      case 'roundabout':
-      case 'rotary':
-        return Icons.roundabout_right_rounded;
-      default:
-        return Icons.arrow_upward_rounded;
-    }
-  }
-}
-
-/// یک آیتم آمار کوچک در ردیف پایین کارت مسیریابی (برچسب + مقدار)
-class _NavStat extends StatelessWidget {
-  final String label;
-  final String value;
-  const _NavStat({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Flexible(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.white.withOpacity(.45), fontSize: 10),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
