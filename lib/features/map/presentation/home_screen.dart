@@ -381,7 +381,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             left: 16,
             child: _SpeedCluster(
               speedKmh: vehiclePositionAsync.valueOrNull?.speedKmh ?? 0,
-              speedLimitKmh: null, // فعلاً منبع داده‌ی محدودیت سرعت متصل نشده؛ وقتی وصل شد این مقدار را بدهید تا تابلو نمای[...]
+              speedLimitKmh: null, // فعلاً منبع داده‌ی محدودیت سرعت متصل نشده؛ وقتی وصل شد این مقدار را بدهید تا تابلو نمایش داده شود
             ),
           ),
 
@@ -430,6 +430,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// نارنجی/سبز) پایین صفحه می‌کشد که هیچ ربطی به طراحی شیشه‌ای بقیه‌ی اپ
   /// ندارد. این متد به‌جایش یک SnackBar شناور و شیشه‌ای (بلور + حاشیه‌ی
   /// نازک + آیکون گرد گرادیانی) نشان می‌دهد که با بنر GPS/نقشه هم‌استایل است.
+  /// 
+  /// نکته جدید: margin را تغییر دادیم تا نوتیفیکیشن‌ها زیر کارت Navigation/GPS
+  /// قرار بگیرند (نه پایین صفحه روی خوشه سرعت). الآن bottom 180 است (قبل 110).
   void _showGlassNotice(String message, {required IconData icon, required List<Color> colors}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -439,7 +442,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         duration: const Duration(seconds: 3),
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 180),
         padding: EdgeInsets.zero,
         content: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -1000,30 +1003,14 @@ class _CompassTicksPainter extends CustomPainter {
       ..color = Colors.white.withOpacity(.6)
       ..strokeWidth = 1.5;
 
-    for (var i = 0; i < 4; i++) {
-      final angle = (i * 90) * 3.1415926535 / 180;
-      final outer = Offset(
-        center.dx + radius * math.sin(angle),
-        center.dy - radius * math.cos(angle),
-      );
-      final inner = Offset(
-        center.dx + (radius - 5) * math.sin(angle),
-        center.dy - (radius - 5) * math.cos(angle),
-      );
-      canvas.drawLine(inner, outer, tickPaint);
+    for (int i = 0; i < 4; i++) {
+      final angle = i * 3.1415926535 / 2;
+      final x1 = center.dx + radius * math.sin(angle);
+      final y1 = center.dy - radius * math.cos(angle);
+      final x2 = center.dx + (radius - 4) * math.sin(angle);
+      final y2 = center.dy - (radius - 4) * math.cos(angle);
+      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), tickPaint);
     }
-
-    final textPainter = TextPainter(
-      text: const TextSpan(
-        text: 'N',
-        style: TextStyle(color: Color(0xFFE53E3E), fontSize: 10, fontWeight: FontWeight.bold),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    textPainter.paint(
-      canvas,
-      Offset(center.dx - textPainter.width / 2, center.dy - radius - textPainter.height + 2),
-    );
   }
 
   @override
@@ -1040,15 +1027,132 @@ class _RoundIconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.homeAccentDark,
-          border: Border.all(color: Colors.white.withOpacity(.08)),
-          boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 14)],
+          color: Colors.black.withOpacity(.4),
+          border: Border.all(color: Colors.white.withOpacity(.15)),
         ),
-        child: Icon(icon, color: Colors.white, size: 22),
+        child: Icon(icon, color: Colors.white70, size: 24),
+      ),
+    );
+  }
+}
+
+class _SpeedCluster extends StatelessWidget {
+  final double speedKmh;
+  final double? speedLimitKmh;
+  const _SpeedCluster({required this.speedKmh, required this.speedLimitKmh});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 92,
+      height: 92,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black.withOpacity(.5),
+        border: Border.all(color: Colors.white.withOpacity(.15), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              speedKmh.toStringAsFixed(0),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Text(
+              'km/h',
+              style: TextStyle(color: Colors.white54, fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActiveNavigationCard extends StatelessWidget {
+  final ActiveNavigation navigation;
+  final VoidCallback onClose;
+  const _ActiveNavigationCard({required this.navigation, required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF14171F).withOpacity(.78),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.subAccentB.withOpacity(.45)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.subAccentB.withOpacity(.25),
+                blurRadius: 24,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.subAccentGradient,
+                      ),
+                      child: const Icon(Icons.navigation_rounded, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'مسیریابی فعال',
+                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${navigation.remainingDistanceKm.toStringAsFixed(1)} کیلومتر',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+                      onPressed: onClose,
+                      splashRadius: 20,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
