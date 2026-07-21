@@ -64,6 +64,13 @@ class SettingsScreen extends ConsumerWidget {
                           style: TextStyle(color: AppColors.subAccentB, fontWeight: FontWeight.bold, fontSize: 15)),
                       const SizedBox(height: 6),
                       _MenuRow(icon: Icons.map_rounded, label: 'تنظیمات نقشه', desc: 'دانلود نقشه آفلاین استانی', chevron: true, onTap: () => context.go('/map-settings')),
+                      _MenuRow(
+                        icon: Icons.router_rounded,
+                        label: 'تنظیمات مسیریابی آفلاین',
+                        desc: 'OSRM محلی، کش و تنظیمات',
+                        chevron: true,
+                        onTap: () => context.go('/offline-routing-settings'),
+                      ),
                       const _MenuRow(icon: Icons.brightness_6_rounded, label: 'نمای شب و روز'),
                       _MenuRow(
                         icon: Icons.record_voice_over_rounded,
@@ -242,8 +249,7 @@ class _MenuRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(label, style: const TextStyle(color: Color(0xFFF0F2F4), fontSize: 14, fontWeight: FontWeight.w500)),
-                  if (desc != null) ...[
-                    const SizedBox(height: 3),
+                  if (desc != null) ...[\n                    const SizedBox(height: 3),
                     Text(desc!, style: const TextStyle(color: Color(0xFF8B929B), fontSize: 11)),
                   ],
                 ],

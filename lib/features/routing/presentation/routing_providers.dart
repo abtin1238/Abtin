@@ -1,12 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import '../data/routing_service.dart';
+import '../data/offline_routing_service.dart';
 import '../../map/presentation/destination_provider.dart';
 import '../../gps/presentation/gps_providers.dart';
 
 /// سرویس مسیریابی
 final routingServiceProvider = Provider<RoutingService>((ref) {
   return RoutingService();
+});
+
+/// سرویس مسیریابی آفلاین
+final offlineRoutingServiceProvider = Provider<OfflineRoutingService>((ref) {
+  return OfflineRoutingService();
+});
+
+/// مدیریت داده‌های نقشه آفلاین
+final offlineMapDataManagerProvider = Provider<OfflineMapDataManager>((ref) {
+  return OfflineMapDataManager();
 });
 
 /// وضعیت مسیریابی فعال
@@ -25,6 +36,7 @@ class ActiveNavigation {
   final double remainingDistanceKm;
   final double distanceToNextManeuverM; // فاصله تا پیچ بعدی (متر)
   final String? errorMessage;
+  final bool isOfflineRoute; // آیا این مسیر از سرویس آفلاین است؟
 
   const ActiveNavigation({
     required this.route,
@@ -33,6 +45,7 @@ class ActiveNavigation {
     required this.remainingDistanceKm,
     this.distanceToNextManeuverM = 0,
     this.errorMessage,
+    this.isOfflineRoute = false,
   });
 
   ActiveNavigation copyWith({
@@ -42,6 +55,7 @@ class ActiveNavigation {
     double? remainingDistanceKm,
     double? distanceToNextManeuverM,
     String? errorMessage,
+    bool? isOfflineRoute,
   }) {
     return ActiveNavigation(
       route: route ?? this.route,
@@ -50,6 +64,7 @@ class ActiveNavigation {
       remainingDistanceKm: remainingDistanceKm ?? this.remainingDistanceKm,
       distanceToNextManeuverM: distanceToNextManeuverM ?? this.distanceToNextManeuverM,
       errorMessage: errorMessage ?? this.errorMessage,
+      isOfflineRoute: isOfflineRoute ?? this.isOfflineRoute,
     );
   }
 
@@ -94,6 +109,11 @@ final activeNavigationProvider = StateNotifierProvider<ActiveNavigationNotifier,
 });
 
 /// محاسبه مسیر از موقعیت فعلی به مقصد انتخاب‌شده
+/// 
+/// این provider سه سطح fallback را پشتیبانی می‌کند:
+/// 1. OSRM محلی (اگر فعال باشد)
+/// 2. OSRM عمومی آنلاین
+/// 3. خط مستقیم تقریبی
 final calculateRouteProvider = FutureProvider.autoDispose<RouteInfo?>((ref) async {
   final destination = ref.watch(selectedDestinationProvider);
   final vehiclePosition = ref.watch(vehiclePositionProvider).value;
@@ -102,10 +122,112 @@ final calculateRouteProvider = FutureProvider.autoDispose<RouteInfo?>((ref) asyn
     return null;
   }
 
-  final routingService = ref.read(routingServiceProvider);
+  final offlineRoutingService = ref.read(offlineRoutingServiceProvider);
   
-  return await routingService.calculateRoute(
+  return await offlineRoutingService.calculateRoute(
     origin: LatLng(vehiclePosition.lat, vehiclePosition.lng),
     destination: destination.point,
   );
+});
+
+/// محاسبه مسیر با ترجیح آفلاین کامل
+/// 
+/// این provider فقط سرور محلی OSRM را امتحان می‌کند
+final calculateOfflineRouteOnlyProvider = FutureProvider.autoDispose<RouteInfo?>((ref) async {
+  final destination = ref.watch(selectedDestinationProvider);
+  final vehiclePosition = ref.watch(vehiclePositionProvider).value;
+  
+  if (destination == null || vehiclePosition == null) {
+    return null;
+  }
+
+  final offlineRoutingService = ref.read(offlineRoutingServiceProvider);
+  
+  return await offlineRoutingService.calculateRoute(
+    origin: LatLng(vehiclePosition.lat, vehiclePosition.lng),
+    destination: destination.point,
+    useLocalOnly: true, // فقط محلی
+  );
+});
+
+/// بررسی دسترسی به سرور OSRM محلی
+final osrmAvailabilityProvider = FutureProvider<bool>((ref) async {
+  final offlineRoutingService = ref.read(offlineRoutingServiceProvider);
+  return await offlineRoutingService.isLocalOsrmAvailable();
+});
+
+/// اطلاعات آمار سرویس مسیریابی آفلاین
+final osrmStatsProvider = Provider<Map<String, dynamic>>((ref) {
+  final offlineRoutingService = ref.read(offlineRoutingServiceProvider);
+  return offlineRoutingService.getCacheStats();
+});
+
+/// فهرست نقشه‌های دانلود‌شده
+final downloadedMapsProvider = Provider<List<DownloadedMapData>>((ref) {
+  final mapManager = ref.read(offlineMapDataManagerProvider);
+  return mapManager.getDownloadedMaps();
+});
+
+/// Provider برای دانلود نقشه‌های جدید
+final downloadMapProvider = FutureProvider.autoDispose.family<bool, (String, String)>((ref, args) async {
+  final (regionName, downloadUrl) = args;
+  final mapManager = ref.read(offlineMapDataManagerProvider);
+  return await mapManager.downloadMapData(regionName, downloadUrl);
+});
+
+/// تنظیمات مسیریابی
+class RoutingSettings {
+  final bool useOfflineOnly; // استفاده فقط از مسیریابی آفلاین
+  final String localOsrmUrl; // URL سرور محلی
+  final bool enableRouteCache; // فعال‌سازی کش مسیرها
+  final int cacheMaxSize; // حداکثر تعداد مسیرهای کش‌شده
+
+  const RoutingSettings({
+    this.useOfflineOnly = false,
+    this.localOsrmUrl = 'http://localhost:5000',
+    this.enableRouteCache = true,
+    this.cacheMaxSize = 100,
+  });
+
+  RoutingSettings copyWith({
+    bool? useOfflineOnly,
+    String? localOsrmUrl,
+    bool? enableRouteCache,
+    int? cacheMaxSize,
+  }) {
+    return RoutingSettings(
+      useOfflineOnly: useOfflineOnly ?? this.useOfflineOnly,
+      localOsrmUrl: localOsrmUrl ?? this.localOsrmUrl,
+      enableRouteCache: enableRouteCache ?? this.enableRouteCache,
+      cacheMaxSize: cacheMaxSize ?? this.cacheMaxSize,
+    );
+  }
+}
+
+/// Notifier برای مدیریت تنظیمات مسیریابی
+class RoutingSettingsNotifier extends StateNotifier<RoutingSettings> {
+  RoutingSettingsNotifier()
+      : super(const RoutingSettings());
+
+  void setUseOfflineOnly(bool value) {
+    state = state.copyWith(useOfflineOnly: value);
+  }
+
+  void setLocalOsrmUrl(String url) {
+    state = state.copyWith(localOsrmUrl: url);
+  }
+
+  void setEnableRouteCache(bool value) {
+    state = state.copyWith(enableRouteCache: value);
+  }
+
+  void setCacheMaxSize(int size) {
+    state = state.copyWith(cacheMaxSize: size);
+  }
+}
+
+/// Provider برای تنظیمات مسیریابی
+final routingSettingsProvider =
+    StateNotifierProvider<RoutingSettingsNotifier, RoutingSettings>((ref) {
+  return RoutingSettingsNotifier();
 });
